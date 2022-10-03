@@ -1,0 +1,507 @@
+{% set active_page = 'user_edit' %}
+<!DOCTYPE html>
+<html lang="pt-BR" prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb#">
+
+<head>
+    {% include 'inc_head.jinja' %}
+    {% include "components/inc_head_nohead.jinja" %}
+    {% include "components/head.jinja" %}
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="robots" content="noindex">
+    <meta name="author" content="AesCare">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <script src="https://cdn.aescare.com/js/data/countries.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AesCare - {{ _("Novo usuário")}}</title>
+    <link rel="stylesheet" href="https://cdn.aescare.com/ext/jquery-ui-1.12.1/jquery-ui.min.css">
+    <link rel="shortcut icon" type="image/x-icon" href="https://cdn.aescare.com/favicon.ico">
+</head>
+
+<style>
+    p {
+        font-size: 13px;
+    }
+
+    footer{
+        display:none;
+    }
+    .modal-backdrop {
+        background-color: white;
+    }
+</style>
+
+<body>
+   <div hidden> {% include 'inc_header.jinja' %}</div>
+    {% include "components/header.jinja" %}
+    {% include "components/head.jinja" %}
+
+    <div class="container mb-4" id="user_profile_edit_app">
+   <div class="shadow p-0 mb-5 bg-white rounded" style="border-radius: 15px!important;">
+   <div class="card mt-5" style="border-radius: 15px; background-color: #f9f1ff; padding: 20px;">
+
+
+    <div class="container-fluid content" style="padding:20px" id="user_edit_app" data-reactroot="" class="user-form content">
+        <div>
+        
+                <div data-reactroot="" class="user-form content">
+                <h1 style="display: inline"><img style="border-radius:50%;float:right;;border-style:solid; border-width:5px; border-color: #686DDC; display: inline" v-if="user" v-bind:src="'https://br.aescare.com/user/photo/' + user.key + '.jpg'">
+                        <h1 style="font-size: 3.0rem;color:black">{{ _("Editar Perfil")}}</h1>
+                        <br>
+                <form class="edit-profile-form" enctype="multipart/form-data">
+                    <div class="row mt-4">
+
+                        <div class="col-12 form-group">
+                            <label>
+                            <input type="radio" v-model="is_medic" name="is_medic" :value="false"> Sou paciente</label>
+                            &nbsp;&nbsp;&nbsp;
+                            <label>
+                            <input type="radio" v-model="is_medic" name="is_medic" :value="true"> Sou médico</label>
+                        </div>
+                        <div class="col-12 form-group">
+                            <label>{{ _("Gênero:")}}</label><br>
+                            <label><input type="radio" name="gender" v-model="gender" :value="'F'"/> {{ _("Feminino")}}</label> &nbsp;&nbsp;&nbsp;
+                            <label><input type="radio" name="gender" v-model="gender" :value="'M'"/> {{ _("Masculino")}}</label>
+                        </div>
+                        <div class="col-12 form-group">
+                            <label v-if="has_password"><input type="checkbox" v-model="change_password"/> Alterar senha</label>
+                        </div>
+                        <div class="col-12 form-group" v-if="change_password || !has_password">
+                            <label v-if="has_password">{{ _("Nova senha")}} :</label>
+                            <label v-if="!has_password">{{ _("Cadastrar senha")}} :</label>
+                            <input style="border-radius: 25px;" type="password" class="form-control" v-model="password">
+                        </div>
+                        <div class="col-12 form-group" style="margin-bottom: 10px;">
+                            <label>{{ _("Nome de usuário:")}}</label>
+                            <input style="border-radius: 25px;" type="text" v-model="username" class="form-control" autocomplete="off">
+                            <small class="error text-error"></small>
+                            <small class="text-muted input-info">{{ _("Sugerimos que utilize um apelido/nickname caso não deseje se expor.")}}</small>
+                        </div>
+                        <div class="col-12 form-group" style="border-radius: 25px;margin-bottom: 10px;">
+                            <label>Celular (DDD + Número - Ex.: 11987654321):</label>
+                            <input style="border-radius: 25px;" type="text" class="form-control" v-model="phone">
+                        </div>
+                        <div class="col-12 form-group" style="border-radius: 25px;margin-bottom: 10px;">
+                            <label>E-mail:</label>
+                            <input style="border-radius: 25px;" type="text" class="form-control" v-model="email">
+                        </div>
+                        <div class="col-12 form-group" >
+                            <label class="control-label">{{ _("Cidade") }}:</label>
+                            <div class="react-autosuggest__container">
+                                <input style="border-radius: 25px;" type="text" id="combo_city" v-model="city_text" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" v-on:click="refresh_autocomplete()"
+                                    aria-haspopup="false" class="form-control">
+                                <div id="city_selector" class="react-autosuggest__suggestions-container"></div>
+                            </div>
+                        </div>
+
+                            {# <div class="input-group mb-4">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text" id="basic-addon1" style="background-color: #ebe6f7 !important;opacity:40%;">Procedimento</span>
+                                </div>
+                                <input type="text" id="search_treatment" class="form-control" v-model="search_treatment_selected" value="" placeholder="Ex: Lipoescultura" aria-label="procedimento" aria-describedby="basic-addon1">
+                                <div id="react-autowhatever-treatment_select" class="react-autosuggest__suggestions-container">
+                                </div>
+                            </div> #}
+
+                                <div class="col-12 form-group" >
+                                    <label class="control-label" style="margin-top: 10px;margin-bottom: 0px;">{{ _("Foto do Perfil")}}</label>
+                                     <div class="form-group" style="margin-top: 0px;padding-top: 7px;">
+                                        <div class="input-group">
+                                            <label class="input-group-btn mb-0">
+                                                <span class="btn btn-primary" style="border-radius: 5px 0px 0px 5px;height: 30px;">
+                                                    <i class="ac-icon ac-camera ml-1"></i>
+                                                </span>
+                                                <input type="file" id="attachments" name="attachments" class="form-file" ref="myFiles" accept="image/*" multiple="" style="display: none;"
+                                                    @change="uploadFieldChange">
+                                            </label>
+                                            <input type="text" id="attachment_name" class="form-control" readonly="" style="border-radius: 0px 5px 5px 0px; height: 30px;">
+                                        </div>
+                                     </div>
+                                </div>             
+                                        {#<div class="row">
+                                            <div v-if="user.has_photo" style="margin:10px">
+                                                <span class="badge badge-info" style="height:140px; background-color: #f9f1ff;">
+                                                    <a style="cursor: pointer;" v-on:click="removeImage()" class="alert-link">
+                                                        {{ _("Remover")}}
+                                                    </a>
+                                                    <br/>
+                                                    <br/>
+                                                    <img v-bind:src="'/user/avatar/'+ user.key+'.jpg?nocache=true&t='+ time"
+                                                        style="max-width:100px;max-height:100px" class="img-responsive" />
+                                                    <br/>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div> #}
+                                
+
+                         
+
+                        {# <div class="col-12" style="margin-top: 10px ;margin-bottom: 10px;">
+                                    <h2>{{ _("Notificações")}}</h2> 
+                                </div>
+                                <div class="col-12">
+                                    <label >{{ _("Selecione os tipos de notificações que deseja receber:")}}</label>
+                                </div>
+
+                                {% for notification_type in all_notification_types %}
+
+                                <div class="col-12 col-md-12  form-group" style="margin-bottom: 0px;">
+                                <input type="checkbox" name="notifications_selected" value="{{ notification_type.type }}" v-model="notifications_selected" >                            
+                                    <label class="text-muted" style="font-size:15px">{{ notification_type.description }}</label> 
+                                </div>
+
+                                {% endfor %} #}
+
+                        {# <div class="col-12 form-group">
+                            <input type="checkbox" v-model="is_contract_accepted"> * Eu aceito os <a href="/termos-de-uso" target="_blank">Termos de Uso</a> e a <a href="/politica-de-privacidade" target="_blank">Política de Privacidade</a> do AesCare.
+                        </div> #}
+
+
+                        <div class="col-12 text-right mt-3">
+                            <!-- a href="#" class="btn btn-info mr-1">Cancelar</a -->
+                            <a v-on:click="save" class="btn btn-primary" style="color: white;">{{ _("Salvar")}}</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="modal fade" id="loadingModal" tabindex="-1" role="dialog" aria-labelledby="loadingModalCentered" aria-hidden="true" data-backdrop="static" style="position: fixed;">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div style="background-color: #fff0; margin: auto;">
+                    <div class="modal-body" style="margin: auto;">
+                        <img src="/img/loading.gif">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+
+    <div hidden>{% include 'inc_footer.jinja' %}</div>
+    {% include "components/footer.jinja" %}
+
+    
+    <script src="https://cdn.aescare.com/ext/jquery-ui-1.12.1/jquery-ui.min.js"></script>
+
+    <script>
+        function aescare_user_detail_callback(user) {
+
+            if(user!=null){
+                user_edit_app.username = user.username;
+                user_edit_app.city_id = user.city_id;
+                if(user.city != null && user.city.state != null){
+                    user_edit_app.city_text = user.city.name + " / " + user.city.state.abbr;
+                }
+
+                if(user.encrypted_password == null){
+                    user_edit_app.has_password = false;
+                }else{
+                    user_edit_app.has_password = true;
+                }
+                user_edit_app.email = user.email;
+                user_edit_app.phone = user.phone;
+                user_edit_app.gender = user.gender;
+                user_edit_app.is_medic = user.is_medic;
+                user_edit_app.user.has_photo = "{{ 'true' if user.has_photo == True else 'false' }}";
+                user_edit_app.user.url_image = "{{ user.url_image if user.url_image else '' }}";
+                /* {% for notification_type in all_notification_types %}
+                user_edit_app.all_notification_types.push("{{ notification_type.type }}");
+                {% endfor %}
+
+                 {% for notification_type in enable_notifications %}
+                 {% if notification_type.is_enable %}
+                    user_edit_app.notifications_selected.push("{{ notification_type.notification_type }}");
+                   {% endif %}
+                 {% endfor %}*/
+
+                if(user.is_contract_accepted != null){
+                    user_edit_app.is_contract_accepted = user.is_contract_accepted;
+                }
+
+            }else{
+                window.location.href = "/login";
+            }
+
+        }
+
+    </script>
+
+    <script>
+        Vue.config.devtools = true;
+
+        user_edit_app = new Vue({
+            el: '#user_edit_app',
+            data: {
+                email: null,
+                notifications_selected: [],
+                phone: null,
+           	    user: "",
+                username: null,
+                gender: null,
+                is_medic: null,
+                city_id: null,
+                password: null,
+                has_password: false,
+                change_password: false,
+                is_contract_accepted: false,
+                time: 123,
+                url_to_redirect: null,
+                is_new: true,
+                show_etapa_1: true,
+                show_etapa_2: false,
+                city_text: "",
+                aceito_contrato: null,
+                search_treatment_selected_id: null,
+                search_treatment_selected: ""
+            },
+
+            mounted: function () {
+                this.url_to_redirect = cds_url_param('url');
+            },
+
+            methods: {
+                removeImage: function () {
+
+                    var formData = new FormData();
+
+                    $.ajax({
+                        type: 'DELETE',
+                        url: CDS_WS_HOST+'/user/photo',
+                        data: formData,
+                        crossDomain: true,
+                        processData: false,
+                        contentType: false,
+                        cache: false,
+                        xhrFields: {
+                            withCredentials: true
+                        },
+                        success: function (data) {
+                            user_edit_app.user.has_photo = false;
+                            user_edit_app.$forceUpdate();
+                            $("#attachment_name").val("");
+                        }
+                    });
+
+                },
+
+                uploadFieldChange: function (e) {
+                    var formData = new FormData(e.target.form);
+
+                    $.ajax({
+                        type: 'POST',
+                        url: aescare.ws_host +'/user/photo',
+                        data: formData,
+                        crossDomain: true,
+                        processData: false,
+                        contentType: false,
+                        cache: false,
+                        xhrFields: {
+                            withCredentials: true
+                        },
+                        success: function (data) {
+                            user_edit_app.user.has_photo = true;
+                            user_edit_app.user.url_image = data.user.url_image;
+                            user_edit_app.time = (new Date()).getTime();
+                            user_edit_app.$forceUpdate();
+                            $("#attachment_name").val("");
+                        }
+                    });
+
+                },
+
+                selectRole: function(role){
+                    if (role == 'medic'){
+                        document.cookie = "aescare_user_role=medic; domain=.aescare.com; path=/";
+                        if(aescare.is_local){
+                        document.cookie = "aescare_user_role=medic; domain=.ac.local; path=/";
+                        }
+                        this.show_select_role = false;
+                        this.is_medic = true;
+                        user_edit_app.$forceUpdate();
+
+                        setTimeout(refresh_autocomplete, 500);
+                    } else {
+                        this.show_select_role = false;
+                        user_edit_app.$forceUpdate();
+
+                        setTimeout(refresh_autocomplete, 500);
+
+                    }
+                },
+                
+                save: function () {
+
+
+                    if(this.gender == null){
+                        cds_notify("Preencha seu gênero.", 'error', 3000);
+                        return;
+                    }
+
+                    if (this.email == null && this.phone == null) {
+                        cds_notify("Digite email ou telefone.", 'error', 3000);
+                        return;
+                    }
+
+                    if (this.username == null || this.username == "") {
+                        cds_notify("Preencha seu nome de usuário.", 'error', 3000);
+                        return;
+                    }
+
+                    if (this.change_password && (this.password == null || this.password == "")) {
+                        cds_notify("Preencha o campo senha.", 'error', 3000);
+                        return;
+                    }
+
+                  /*  if (!this.is_contract_accepted) {
+                        ac_notify("Para continuar aceite o termo de uso.", 'error', 3000);
+                        return;
+                    }*/
+
+                    if(this.is_medic == false){
+                        document.cookie = "aescare_user_role=user; domain=.aescare.com; path=/";
+                        if (aescare.is_local) {
+                            document.cookie = "aescare_user_role=user; domain=.ac.local; path=/";
+                        }
+                    } else {
+                        document.cookie = "aescare_user_role=medic; domain=.aescare.com; path=/";
+                        if (aescare.is_local) {
+                            document.cookie = "aescare_user_role=medic; domain=.ac.local; path=/";
+                        }
+                    }
+
+                    $('#loadingModal').modal('show');
+
+                    var formData = new FormData();
+                    formData.append("phone", this.phone);
+                    formData.append("email", this.email);
+                    formData.append("username", this.username);
+
+                    if(this.password != null){
+                        formData.append("password", this.password);
+                    }
+                    formData.append("is_medic", this.is_medic);
+                    formData.append("city_id", this.city_id);
+                    formData.append("city_text", this.city_text);
+                    if(this.gender != null){
+                        formData.append("gender", this.gender);
+                    }
+
+                    $.ajax({
+                        type: 'POST',
+                        url: aescare.ws_host + '/user2',
+                        data: formData,
+                        crossDomain: true,
+                        processData: false,
+                        contentType: false,
+                        cache: false,
+                        xhrFields: {
+                            withCredentials: true
+                        },
+
+                        success: function (data) {
+
+                            if(data.code == 1){
+                                if(user_edit_app.redirect){
+                                    window.location.href = user_edit_app.redirect;
+                                }else{
+
+                                    if(user_edit_app.is_medic){
+                                        window.location.href = "/my";
+                                    }else if(user_edit_app.city_id != null){
+                                        window.location.href = "/home?near="+user_edit_app.city_id;
+                                    }else{
+                                        window.location.href = "/";
+                                    }
+                                }
+                            }else{
+                                $('#loadingModal').modal('hide');
+                                ac_notify(data.message);
+                            }
+                            
+                        },
+                        dataType: 'json'
+                    }).done(function() {$('#loadingModal').modal('hide');});
+
+                }
+
+            }
+        });
+
+        function refresh_autocomplete(){    
+
+             $("#search_treatment").autocomplete({
+        source: function(request, response) {
+          $.ajax({
+            dataType: "json",
+            type: 'GET',
+            url: "https://ws.aescare.com/treatment",
+            data: { 'name': $('#search_treatment').val() },
+            success: function(data) {
+             
+              response($.map(data, function(item) {
+                if (!item)
+                    return {}
+                return { label: item.name, value: item.treatment_id };
+              }));
+            },
+            error: function(data) {
+                //$('input.suggest-user').removeClass('ui-autocomplete-loading');
+            }
+          });
+        },
+        appendTo: "#react-autowhatever-treatment_select",
+        select: function(event, ui) {
+          user_edit_app.search_treatment_selected = ui.item.label;
+          user_edit_app.search_treatment_selected_id = ui.item.value;
+          console.log(user_edit_app.search_treatment_selected); 
+        }
+      });        
+
+            $("#combo_city").autocomplete({
+                source: function (request, response) {
+                    $.ajax({
+                        dataType: "json",
+                        type: 'Get',
+                        url: aescare.ws_host + "/location/city",
+                        data: { 'lang': aescare.lang, 'name': $('#combo_city').val() },
+                        success: function (data) {
+                            response($.map(data, function (item) {
+                                if (!item)
+                                    return {}
+                                return { label: item.name + " / " + item.state_abbr+ " / " + item.country_abbr, value: item.city_id };
+                            }));
+
+                        },
+                        error: function (data) {
+                            //$('input.suggest-user').removeClass('ui-autocomplete-loading');  
+                        }
+                    });
+                },
+                appendTo: "#city_selector",
+                select: function (event, ui) {
+                    user_edit_app.city_text = ui.item.label;
+                    user_edit_app.city_id = ui.item.value;
+                }
+            });
+            
+        }
+
+
+    </script>
+    <script>
+
+        $(document).ready(function () {
+            refresh_autocomplete();            
+        });
+    
+    </script>
+</body>
+
+</html>
